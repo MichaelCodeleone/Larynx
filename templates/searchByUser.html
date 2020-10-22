@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+{% endblock %}
+
+{% block body %}
+
+<form action="/searchByUser" method="post">
+    <input autocomplete="off" autofocus name="sender" placeholder="Sender (Address)" type="text"/>
+    <input autocomplete="off" autofocus name="receiver" placeholder="Receiver (Address)" type="text"/>
+    <input type="submit" value="Search Messages"/>
+</form>
+
+<ul>
+<br>
+    {% for message in messages %}
+        Date: {{ message.postDate.strftime("%m/%d/%Y, %H:%M")}} <br>
+        From: {{ message.userFrom }} <br>
+        To: {{ message.userTo }} <br>
+        Message: {{ message.message }} <br>
+        <br>
+    {% endfor %}
+</ul>
+{% endblock %}

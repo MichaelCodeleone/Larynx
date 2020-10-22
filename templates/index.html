@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+{% endblock %}
+
+{% block body %} 
+
+<div class="front"> Larynx is a Proof-of-Address system that allows messages to be posted. </div>
+<br>
+<div class="front">Sample Private Key: 223e134a8718f195422908551685004046cfa473630822f536ca57334d85f822</div>
+<div class="front">Sample Private Key #2: a2ec3b680e051de438ec2422cc7b2b90e7e6445db857bf207a0765a4625d6419</div>
+<div class="front">Sample Public Address: 0x7359B97E6c1573c956F8F9813e2CdB18F6624150</div>
+<div class="front">Sample Public Address #2: 0xD0A0A5Cee0172593545F8f64e9e30de5A5dAd164</div>
+<br>
+
+<form action="/" method="post">
+    <input autocomplete="off" autofocus name="userFrom" placeholder="From (Private Key)" type="text"/>
+    <input autocomplete="off" autofocus name="userTo" placeholder="To (Address)" type="text"/>
+    <input autocomplete="off"  name="message" placeholder="Message" type="text"/>
+    <input type="submit" value="Create Message"/>
+</form>
+
+</div>
+<br>
+<ul>
+<br>
+    {% for message in messages %}
+        {% set shortUserFrom = message.userFrom %}
+        {% if message.userFrom|length == 42 %}
+            {% set shortUserFrom = message.userFrom[:6] + '...' ~ message.userFrom[38:42] %}
+        {% endif %}
+        {% set shortUserTo = message.userTo %}
+        {% if message.userTo|length == 42 %}
+            {% set shortUserTo = message.userTo[:6] + '...' ~ message.userTo[38:42] %}
+        {% endif %}
+        {# if messaging to self #}
+        {% if message.userFrom == message.userTo %}
+            {{ message.postDate.strftime("%m/%d/%Y, %H:%M")}} | {{ shortUserFrom }} said: {{ message.message }}
+        {% else %}
+            {{ message.postDate.strftime("%m/%d/%Y, %H:%M")}} | {{ shortUserFrom }} said to {{ shortUserTo }}: {{ message.message }}
+        {% endif %}
+        <br>
+        <br>
+    {% endfor %}
+</ul>
+
+{% endblock %}
