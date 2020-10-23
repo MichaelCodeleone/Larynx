@@ -2,11 +2,26 @@ from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-#----------From pypi eth-wallet to convert private key to address----------
-from eth_wallet import Wallet
-import json
-wallet = Wallet()
-#----------End pypi eth-wallet code----------
+#----------For Private key to Address----------
+import codecs
+import ecdsa
+from Crypto.Hash import keccak
+
+
+#----------Private key to Address----------
+# Modified from https://www.freecodecamp.org/news/how-to-create-an-ethereum-wallet-address-from-a-private-key-ae72b0eee27b/
+def private_to_address(private_key):
+    private_key_bytes = codecs.decode(private_key, 'hex')
+    # Get ECDSA public key
+    key = ecdsa.SigningKey.from_string(private_key_bytes, curve=ecdsa.SECP256k1).verifying_key
+    key_bytes = key.to_string()
+    keccak_hash = keccak.new(digest_bits=256)
+    keccak_hash.update(key_bytes)
+    keccak_digest = keccak_hash.hexdigest()
+    # Take the last 20 bytes
+    wallet_len = 40
+    wallet = '0x' + keccak_digest[-wallet_len:]
+    return wallet
 
 app = Flask(__name__)
 
@@ -27,10 +42,9 @@ class Message(db.Model):
     postDate = db.Column(db.DateTime, default= datetime.now)
      
     def __init__(self, userFrom, userTo, message):
-        wallet.from_private_key(userFrom)
-        self.userFrom = wallet.address()
+        self.userFrom = private_to_address(userFrom).lower()
         #----------If blank then sends to self----------
-        self.userTo = userTo if userTo != '' else wallet.address()
+        self.userTo = userTo.lower() if userTo != '' else self.userFrom.lower()
         self.message = message
         self.postDate = datetime.now()
 
@@ -67,7 +81,7 @@ def inbox():
     if request.method == "GET":
         return render_template("inbox.html")
     elif request.method == "POST":
-        receiver = request.form.get("receiver")
+        receiver = request.form.get("receiver").lower()
         if receiver:
             rows = Message.query.filter_by(userTo = receiver).order_by(Message.id.desc())
             return render_template("inbox.html", messages = rows)
@@ -78,7 +92,7 @@ def sent():
     if request.method == "GET":
         return render_template("sent.html")
     elif request.method == "POST":
-        sender = request.form.get("sender")
+        sender = request.form.get("sender").lower()
         if sender:
             rows = Message.query.filter_by(userFrom = sender).order_by(Message.id.desc())
             return render_template("sent.html", messages = rows)
@@ -89,8 +103,8 @@ def searchByUser():
     if request.method == "GET":
         return render_template("searchByUser.html")
     elif request.method == "POST":
-        sender = request.form.get("sender")
-        receiver = request.form.get("receiver")
+        sender = request.form.get("sender").lower()
+        receiver = request.form.get("receiver").lower()
         if not (sender or receiver):
             return render_template("searchByUser.html")
         if sender and receiver:
@@ -114,4 +128,4 @@ def searchByMessage():
         return render_template("searchByMessage.html", messages = message)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
